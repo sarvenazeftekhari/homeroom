@@ -176,10 +176,3 @@ homeroom/
 | Routing | React Router |
 | Database | Firebase (coming soon) |
 | Hosting | Vercel (coming soon) |
-
----
-
-## Team
-
-- Sarvenaz Eftekhari
-- Neil
