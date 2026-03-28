@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard'
 import Classes from './pages/Classes'
 import Assignments from './pages/Assignments'
 import Leaderboard from './pages/Leaderboard'
+import Shop from './pages/Shop'
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/classes" element={<Classes />} />
         <Route path="/assignments" element={<Assignments />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/shop" element={<Shop />} />
       </Routes>
     </BrowserRouter>
   )
