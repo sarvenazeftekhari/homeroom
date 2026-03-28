@@ -1,8 +1,38 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { auth } from '../firebase'
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
 
 function Login() {
+  const navigate = useNavigate()
+  const [isSignUp, setIsSignUp] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-    const navigate = useNavigate()    
+  async function handleSubmit() {
+    setError('')
+    setLoading(true)
+
+    try {
+      if (isSignUp) {
+        await createUserWithEmailAndPassword(auth, email, password)
+      } else {
+        await signInWithEmailAndPassword(auth, email, password)
+      }
+      navigate('/dashboard')
+    } catch (err) {
+      if (err.code === 'auth/invalid-email') setError('Invalid email address.')
+      else if (err.code === 'auth/wrong-password') setError('Wrong password.')
+      else if (err.code === 'auth/user-not-found') setError('No account found with that email.')
+      else if (err.code === 'auth/email-already-in-use') setError('An account with that email already exists.')
+      else if (err.code === 'auth/weak-password') setError('Password must be at least 6 characters.')
+      else setError('Something went wrong. Please try again.')
+    }
+
+    setLoading(false)
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center">
@@ -17,8 +47,19 @@ function Login() {
         </div>
 
         {/* Title */}
-        <h1 className="text-white text-2xl font-semibold mb-1">Welcome back</h1>
-        <p className="text-gray-400 text-sm mb-8">Sign in to your account to continue</p>
+        <h1 className="text-white text-2xl font-semibold mb-1">
+          {isSignUp ? 'Create an account' : 'Welcome back'}
+        </h1>
+        <p className="text-gray-400 text-sm mb-8">
+          {isSignUp ? 'Sign up to start earning XP' : 'Sign in to your account to continue'}
+        </p>
+
+        {/* Error message */}
+        {error && (
+          <div className="bg-red-900 border border-red-700 text-red-300 text-sm rounded-xl px-4 py-3 mb-4">
+            {error}
+          </div>
+        )}
 
         {/* Form */}
         <div className="flex flex-col gap-4">
@@ -26,6 +67,8 @@ function Login() {
             <label className="text-gray-400 text-sm mb-1 block">Email</label>
             <input
               type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
               placeholder="you@example.com"
               className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-violet-500"
             />
@@ -34,24 +77,30 @@ function Login() {
             <label className="text-gray-400 text-sm mb-1 block">Password</label>
             <input
               type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
               className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-violet-500"
             />
           </div>
 
-          <button 
-            onClick={() => navigate('/dashboard')}
-            className="w-full bg-violet-600 hover:bg-violet-500 text-white font-semibold py-3 rounded-xl mt-2 transition-colors"
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full bg-violet-600 hover:bg-violet-500 disabled:bg-violet-800 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl mt-2 transition-colors"
           >
-            Sign in
+            {loading ? 'Please wait...' : isSignUp ? 'Create account' : 'Sign in'}
           </button>
         </div>
 
-        {/* Switch to sign up */}
+        {/* Toggle sign up / sign in */}
         <p className="text-gray-500 text-sm text-center mt-6">
-          Don't have an account?{' '}
-          <span className="text-violet-400 cursor-pointer hover:text-violet-300">
-            Sign up
+          {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+          <span
+            onClick={() => { setIsSignUp(!isSignUp); setError('') }}
+            className="text-violet-400 cursor-pointer hover:text-violet-300"
+          >
+            {isSignUp ? 'Sign in' : 'Sign up'}
           </span>
         </p>
 
