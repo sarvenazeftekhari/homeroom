@@ -1,4 +1,9 @@
+import { useNavigate } from 'react-router-dom'
+
 function Login() {
+
+    const navigate = useNavigate()    
+
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center">
       <div className="bg-gray-900 border border-gray-800 rounded-2xl p-10 w-full max-w-md">
@@ -34,7 +39,10 @@ function Login() {
             />
           </div>
 
-          <button className="w-full bg-violet-600 hover:bg-violet-500 text-white font-semibold py-3 rounded-xl mt-2 transition-colors">
+          <button 
+            onClick={() => navigate('/dashboard')}
+            className="w-full bg-violet-600 hover:bg-violet-500 text-white font-semibold py-3 rounded-xl mt-2 transition-colors"
+          >
             Sign in
           </button>
         </div>
