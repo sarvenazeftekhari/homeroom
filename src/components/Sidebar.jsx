@@ -6,10 +6,7 @@ function Sidebar({ active }) {
   const items = [
     { label: 'Dashboard', path: '/dashboard' },
     { label: 'My Classes', path: '/classes' },
-    { label: 'Assignments', path: '/assignments' },
-    { label: 'Leaderboard', path: '/leaderboard' },
     { label: 'Friends', path: '/friends' },
-    { label: 'Point Shop', path: '/shop' },
   ]
 
   return (

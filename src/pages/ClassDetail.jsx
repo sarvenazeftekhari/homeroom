@@ -177,17 +177,6 @@ function ClassDetail() {
             </div>
           </div>
 
-          {/* XP Progress bar */}
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-            <div className="flex justify-between items-center mb-3">
-              <p className="text-white text-sm font-medium">Level {cls.userLevel} progress</p>
-              <p className="text-violet-400 text-sm">{cls.userXP} / {cls.nextLevelXP} XP</p>
-            </div>
-            <div className="w-full bg-gray-800 rounded-full h-3">
-              <div className="bg-violet-600 h-3 rounded-full transition-all" style={{ width: `${progressPct}%` }}></div>
-            </div>
-          </div>
-
           {/* Tabs */}
           <div className="flex gap-2">
             <button
