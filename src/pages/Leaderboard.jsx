@@ -1,12 +1,12 @@
 import Sidebar from '../components/Sidebar'
 
 const players = [
-  { rank: 1, name: 'Aarav K.', initials: 'AK', xp: 3210, level: 11, avg: 94, done: 22, color: 'violet' },
-  { rank: 2, name: 'Sara L.', initials: 'SL', xp: 2990, level: 10, avg: 91, done: 20, color: 'teal' },
-  { rank: 3, name: 'Mike R.', initials: 'MR', xp: 2760, level: 10, avg: 89, done: 19, color: 'amber' },
+  { rank: 1, name: 'Nolan H.', initials: 'NH', xp: 3210, level: 11, avg: 94, done: 22, color: 'violet' },
+  { rank: 2, name: 'Neil F.', initials: 'NF', xp: 2990, level: 10, avg: 91, done: 20, color: 'teal' },
+  { rank: 3, name: 'Ben J.', initials: 'BJ', xp: 2760, level: 10, avg: 89, done: 19, color: 'amber' },
   { rank: 4, name: 'Sarvenaz E.', initials: 'SE', xp: 2480, level: 9, avg: 87, done: 17, color: 'violet', isYou: true },
   { rank: 5, name: 'Jake T.', initials: 'JT', xp: 2100, level: 8, avg: 83, done: 15, color: 'red' },
-  { rank: 6, name: 'Priya M.', initials: 'PM', xp: 1950, level: 7, avg: 81, done: 14, color: 'teal' },
+  { rank: 6, name: 'Victoria H.', initials: 'VH', xp: 1950, level: 7, avg: 81, done: 14, color: 'teal' },
   { rank: 7, name: 'Chris W.', initials: 'CW', xp: 1800, level: 7, avg: 79, done: 13, color: 'amber' },
   { rank: 8, name: 'Nina S.', initials: 'NS', xp: 1600, level: 6, avg: 76, done: 12, color: 'violet' },
 ]

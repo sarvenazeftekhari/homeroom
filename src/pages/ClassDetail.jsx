@@ -71,9 +71,9 @@ const classData = {
 }
 
 const diffColors = {
-  Easy: 'bg-green-900 text-green-300',
-  Medium: 'bg-amber-900 text-amber-300',
-  Hard: 'bg-red-900 text-red-300',
+  Easy: 'bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/20',
+  Medium: 'bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/20',
+  Hard: 'bg-red-500/15 text-red-400 ring-1 ring-red-500/20',
 }
 
 const avatarColors = {
@@ -86,7 +86,7 @@ const avatarColors = {
 const headerColors = {
   violet: 'bg-violet-600',
   teal: 'bg-teal-600',
-  amber: 'bg-amber-600',
+  amber: 'bg-amber-500',
 }
 
 function ClassDetail() {
@@ -94,11 +94,11 @@ function ClassDetail() {
   const navigate = useNavigate()
   const cls = classData[id]
   const [tab, setTab] = useState('assignments')
-  const [xp, setXp] = useState(cls.userXP)
+  const [xp, setXp] = useState(cls?.userXP || 0)
   const [purchased, setPurchased] = useState([])
   const [toast, setToast] = useState(null)
   const [showModal, setShowModal] = useState(false)
-  const [assignments, setAssignments] = useState(cls.assignments)
+  const [assignments, setAssignments] = useState(cls?.assignments || [])
   const [newAssignment, setNewAssignment] = useState({ name: '', difficulty: 'Medium', deadline: '' })
 
   if (!cls) return (
@@ -130,17 +130,14 @@ function ClassDetail() {
   ]
 
   const shopColors = {
-    violet: { card: 'border-violet-800 hover:border-violet-600', emoji: 'bg-violet-900', badge: 'bg-violet-900 text-violet-300', button: 'bg-violet-600 hover:bg-violet-500' },
-    teal: { card: 'border-teal-800 hover:border-teal-600', emoji: 'bg-teal-900', badge: 'bg-teal-900 text-teal-300', button: 'bg-teal-600 hover:bg-teal-500' },
-    amber: { card: 'border-amber-800 hover:border-amber-600', emoji: 'bg-amber-900', badge: 'bg-amber-900 text-amber-300', button: 'bg-amber-600 hover:bg-amber-500' },
-    red: { card: 'border-red-800 hover:border-red-600', emoji: 'bg-red-900', badge: 'bg-red-900 text-red-300', button: 'bg-red-600 hover:bg-red-500' },
+    violet: { card: 'border-violet-800/60 hover:border-violet-500/60', emoji: 'bg-violet-900/60', badge: 'bg-violet-500/15 text-violet-400 ring-1 ring-violet-500/20', button: 'bg-violet-600 hover:bg-violet-500 shadow-violet-900/30' },
+    teal: { card: 'border-teal-800/60 hover:border-teal-500/60', emoji: 'bg-teal-900/60', badge: 'bg-teal-500/15 text-teal-400 ring-1 ring-teal-500/20', button: 'bg-teal-600 hover:bg-teal-500 shadow-teal-900/30' },
+    amber: { card: 'border-amber-800/60 hover:border-amber-500/60', emoji: 'bg-amber-900/60', badge: 'bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/20', button: 'bg-amber-600 hover:bg-amber-500 shadow-amber-900/30' },
+    red: { card: 'border-red-800/60 hover:border-red-500/60', emoji: 'bg-red-900/60', badge: 'bg-red-500/15 text-red-400 ring-1 ring-red-500/20', button: 'bg-red-600 hover:bg-red-500 shadow-red-900/30' },
   }
 
   function handleBuy(item) {
-    if (xp < item.cost) {
-      showToast(`Not enough XP to buy ${item.name}!`, 'error')
-      return
-    }
+    if (xp < item.cost) { showToast(`Not enough XP to buy ${item.name}!`, 'error'); return }
     setXp(xp - item.cost)
     setPurchased([...purchased, item.id])
     showToast(`${item.emoji} ${item.name} activated!`, 'success')
@@ -149,23 +146,14 @@ function ClassDetail() {
   function showToast(message, type) {
     setToast({ message, type })
     setTimeout(() => setToast(null), 3000)
-  } 
+  }
 
   function handleAddAssignment() {
     if (!newAssignment.name || !newAssignment.deadline) return
-    setAssignments([...assignments, {
-      id: assignments.length + 1,
-      ...newAssignment,
-      status: 'pending',
-      grade: null,
-      xp: null,
-    }])
+    setAssignments([...assignments, { id: assignments.length + 1, ...newAssignment, status: 'pending', grade: null, xp: null }])
     setNewAssignment({ name: '', difficulty: 'Medium', deadline: '' })
     setShowModal(false)
   }
-
-  const totalXP = assignments.reduce((sum, a) => sum + (a.xp || 0), 0)
-  const progressPct = Math.min(Math.round((cls.userXP / cls.nextLevelXP) * 100), 100)
 
   return (
     <div className="min-h-screen bg-gray-950 flex">
@@ -174,86 +162,70 @@ function ClassDetail() {
       <div className="ml-56 flex-1 flex flex-col">
 
         {/* Class header banner */}
-        <div className={`${headerColors[cls.color]} px-8 py-6`}>
+        <div className={`${headerColors[cls.color]} px-8 py-7`}>
           <button
             onClick={() => navigate('/classes')}
-            className="text-white text-sm opacity-70 hover:opacity-100 mb-3 block"
+            className="text-white/70 text-sm hover:text-white mb-4 block transition-colors font-medium"
           >
             ← Back to classes
           </button>
-          <h1 className="text-white text-2xl font-semibold">{cls.name}</h1>
-          <p className="text-white opacity-70 text-sm mt-1">{cls.instructor} · {cls.students} students</p>
+          <h1 className="text-white text-2xl font-bold">{cls.name}</h1>
+          <p className="text-white/70 text-sm mt-1 font-medium">{cls.instructor} · {cls.students} students</p>
         </div>
 
         <div className="p-8 flex flex-col gap-6">
 
           {/* Stat cards */}
           <div className="grid grid-cols-4 gap-4">
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-              <p className="text-gray-400 text-xs mb-2">Your XP</p>
-              <p className="text-white text-2xl font-semibold">{cls.userXP}</p>
-              <p className="text-violet-400 text-xs mt-1">in this class</p>
-            </div>
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-              <p className="text-gray-400 text-xs mb-2">Class rank</p>
-              <p className="text-white text-2xl font-semibold">#{cls.userRank}</p>
-              <p className="text-violet-400 text-xs mt-1">out of {cls.students}</p>
-            </div>
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-              <p className="text-gray-400 text-xs mb-2">Avg grade</p>
-              <p className="text-white text-2xl font-semibold">{cls.avgGrade}%</p>
-              <p className="text-violet-400 text-xs mt-1">this class</p>
-            </div>
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-              <p className="text-gray-400 text-xs mb-2">Level</p>
-              <p className="text-white text-2xl font-semibold">Lv. {cls.userLevel}</p>
-              <p className="text-violet-400 text-xs mt-1">{cls.nextLevelXP - cls.userXP} XP to next</p>
-            </div>
+            {[
+              { label: 'Your XP', value: cls.userXP, sub: 'in this class' },
+              { label: 'Class rank', value: `#${cls.userRank}`, sub: `out of ${cls.students}` },
+              { label: 'Avg grade', value: `${cls.avgGrade}%`, sub: 'this class' },
+              { label: 'Level', value: `Lv. ${cls.userLevel}`, sub: `${cls.nextLevelXP - cls.userXP} XP to next` },
+            ].map(card => (
+              <div key={card.label} className="bg-gray-900 border border-gray-800/80 rounded-2xl p-5 hover:border-gray-700 transition-colors">
+                <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">{card.label}</p>
+                <p className="text-white text-2xl font-bold">{card.value}</p>
+                <p className="text-violet-400 text-xs mt-1 font-medium">{card.sub}</p>
+              </div>
+            ))}
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setTab('assignments')}
-              className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors ${tab === 'assignments' ? 'bg-violet-600 text-white' : 'bg-gray-900 text-gray-400 hover:text-white border border-gray-800'}`}
-            >
-              Assignments
-            </button>
-            <button
-              onClick={() => setTab('leaderboard')}
-              className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors ${tab === 'leaderboard' ? 'bg-violet-600 text-white' : 'bg-gray-900 text-gray-400 hover:text-white border border-gray-800'}`}
-            >
-              Leaderboard
-            </button>
-            <button
-              onClick={() => setTab('shop')}
-              className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors ${tab === 'shop' ? 'bg-violet-600 text-white' : 'bg-gray-900 text-gray-400 hover:text-white border border-gray-800'}`}
-            >
-              Point Shop
-            </button>
+          <div className="flex gap-2 bg-gray-900 border border-gray-800/80 rounded-2xl p-1.5 w-fit">
+            {['assignments', 'leaderboard', 'shop'].map(t => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`px-5 py-2 rounded-xl text-sm font-semibold capitalize transition-all ${
+                  tab === t
+                    ? 'bg-violet-600 text-white shadow-md shadow-violet-900/40'
+                    : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                {t === 'shop' ? 'Point Shop' : t.charAt(0).toUpperCase() + t.slice(1)}
+              </button>
+            ))}
           </div>
 
           {/* Assignments tab */}
           {tab === 'assignments' && (
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-              <div className="flex justify-between items-center px-6 py-4 border-b border-gray-800">
-                <h2 className="text-white font-medium">Assignments</h2>
+            <div className="bg-gray-900 border border-gray-800/80 rounded-2xl overflow-hidden">
+              <div className="flex justify-between items-center px-6 py-4 border-b border-gray-800/60">
+                <h2 className="text-white font-bold">Assignments</h2>
                 <button
                   onClick={() => setShowModal(true)}
-                  className="text-sm bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-xl transition-colors"
+                  className="text-sm bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-xl transition-colors font-semibold shadow-lg shadow-violet-900/30"
                 >
                   + Add assignment
                 </button>
               </div>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-800">
-                    <th className="text-left text-gray-400 font-normal px-6 py-3">Name</th>
-                    <th className="text-left text-gray-400 font-normal px-4 py-3">Difficulty</th>
-                    <th className="text-left text-gray-400 font-normal px-4 py-3">Deadline</th>
-                    <th className="text-left text-gray-400 font-normal px-4 py-3">Grade</th>
-                    <th className="text-left text-gray-400 font-normal px-4 py-3">XP</th>
-                    <th className="text-left text-gray-400 font-normal px-4 py-3">Action</th>
+                  <tr className="border-b border-gray-800/60">
+                    {['Name', 'Difficulty', 'Deadline', 'Grade', 'XP', 'Action'].map(h => (
+                      <th key={h} className="text-left text-gray-500 font-semibold text-xs uppercase tracking-wider px-6 py-3 first:pl-6">{h}</th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
@@ -267,44 +239,43 @@ function ClassDetail() {
 
           {/* Leaderboard tab */}
           {tab === 'leaderboard' && (
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-800">
-                <h2 className="text-white font-medium">Class Leaderboard</h2>
+            <div className="bg-gray-900 border border-gray-800/80 rounded-2xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-800/60">
+                <h2 className="text-white font-bold">Class Leaderboard</h2>
               </div>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-800">
-                    <th className="text-left text-gray-400 font-normal px-6 py-3">Rank</th>
-                    <th className="text-left text-gray-400 font-normal px-4 py-3">Student</th>
-                    <th className="text-left text-gray-400 font-normal px-4 py-3">Avg Grade</th>
-                    <th className="text-left text-gray-400 font-normal px-4 py-3">XP</th>
+                  <tr className="border-b border-gray-800/60">
+                    {['Rank', 'Student', 'Avg Grade', 'XP'].map(h => (
+                      <th key={h} className="text-left text-gray-500 font-semibold text-xs uppercase tracking-wider px-6 py-3">{h}</th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {cls.leaderboard.map(player => (
                     <tr
                       key={player.rank}
-                      className={`border-b border-gray-800 last:border-0 ${player.isYou ? 'bg-violet-950' : 'hover:bg-gray-800'} transition-colors`}
+                      className={`border-b border-gray-800/60 last:border-0 transition-colors ${player.isYou ? 'bg-violet-600/10' : 'hover:bg-gray-800/50'}`}
                     >
                       <td className="px-6 py-4">
-                        <span className={`font-semibold ${player.rank <= 3 ? 'text-violet-400' : 'text-gray-500'}`}>#{player.rank}</span>
+                        <span className={`font-bold text-base ${player.rank === 1 ? 'text-amber-400' : player.rank === 2 ? 'text-gray-300' : player.rank === 3 ? 'text-amber-700' : 'text-gray-500'}`}>
+                          {player.rank === 1 ? '🥇' : player.rank === 2 ? '🥈' : player.rank === 3 ? '🥉' : `#${player.rank}`}
+                        </span>
                       </td>
-                      <td className="px-4 py-4">
+                      <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${avatarColors[player.color]}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${avatarColors[player.color]}`}>
                             {player.initials}
                           </div>
-                          <span className={`font-medium ${player.isYou ? 'text-violet-300' : 'text-white'}`}>
-                            {player.name}
-                          </span>
+                          <span className={`font-semibold ${player.isYou ? 'text-violet-300' : 'text-white'}`}>{player.name}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-4">
-                        <span className={`font-medium ${player.avg >= 90 ? 'text-green-400' : player.avg >= 80 ? 'text-violet-400' : 'text-amber-400'}`}>
+                      <td className="px-6 py-4">
+                        <span className={`font-bold ${player.avg >= 90 ? 'text-emerald-400' : player.avg >= 80 ? 'text-violet-400' : 'text-amber-400'}`}>
                           {player.avg}%
                         </span>
                       </td>
-                      <td className="px-4 py-4 text-violet-400 font-semibold">{player.xp} XP</td>
+                      <td className="px-6 py-4 text-violet-400 font-bold">{player.xp} XP</td>
                     </tr>
                   ))}
                 </tbody>
@@ -314,48 +285,38 @@ function ClassDetail() {
 
           {/* Point Shop tab */}
           {tab === 'shop' && (
-            <div className="flex flex-col gap-6">
-
-              {/* XP balance */}
-              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 flex items-center justify-between">
+            <div className="flex flex-col gap-5">
+              <div className="bg-gray-900 border border-gray-800/80 rounded-2xl p-5 flex items-center justify-between">
                 <div>
-                  <p className="text-gray-400 text-sm">Your XP balance in this class</p>
-                  <p className="text-white text-3xl font-semibold mt-1">{xp} XP</p>
+                  <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Your XP balance in this class</p>
+                  <p className="text-white text-3xl font-bold">{xp} <span className="text-violet-400 text-lg">XP</span></p>
                 </div>
                 <div className="text-4xl">🏦</div>
               </div>
 
-              {/* Shop items */}
               <div className="grid grid-cols-3 gap-4">
                 {shopItems.map(item => {
                   const styles = shopColors[item.color]
                   const bought = purchased.includes(item.id)
                   const canAfford = xp >= item.cost
                   return (
-                    <div
-                      key={item.id}
-                      className={`bg-gray-900 border rounded-2xl p-5 flex flex-col gap-3 transition-colors ${styles.card} ${bought ? 'opacity-50' : ''}`}
-                    >
+                    <div key={item.id} className={`bg-gray-900 border rounded-2xl p-5 flex flex-col gap-3 transition-all duration-200 ${styles.card} ${bought ? 'opacity-40' : ''}`}>
                       <div className={`w-11 h-11 ${styles.emoji} rounded-xl flex items-center justify-center text-2xl`}>
                         {item.emoji}
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-white font-semibold text-sm">{item.name}</h3>
-                        <p className="text-gray-400 text-xs mt-1 leading-relaxed">{item.description}</p>
+                        <h3 className="text-white font-bold text-sm">{item.name}</h3>
+                        <p className="text-gray-500 text-xs mt-1 leading-relaxed">{item.description}</p>
                       </div>
                       <div className="flex items-center justify-between mt-1">
-                        <span className={`text-xs font-semibold px-3 py-1 rounded-full ${styles.badge}`}>
-                          {item.cost} XP
-                        </span>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${styles.badge}`}>{item.cost} XP</span>
                         <button
                           onClick={() => handleBuy(item)}
                           disabled={bought || !canAfford}
-                          className={`text-xs text-white font-medium px-3 py-1.5 rounded-xl transition-colors ${
-                            bought
-                              ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                              : !canAfford
-                              ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                              : styles.button
+                          className={`text-xs text-white font-bold px-3 py-1.5 rounded-xl transition-all shadow-lg ${
+                            bought ? 'bg-gray-700 text-gray-500 cursor-not-allowed shadow-none'
+                            : !canAfford ? 'bg-gray-800 text-gray-500 cursor-not-allowed shadow-none'
+                            : `${styles.button}`
                           }`}
                         >
                           {bought ? '✓ Active' : !canAfford ? 'Not enough XP' : 'Buy'}
@@ -366,82 +327,59 @@ function ClassDetail() {
                 })}
               </div>
 
-              {/* Active boosts */}
               {purchased.length > 0 && (
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-                  <h2 className="text-white font-medium mb-4">Active boosts</h2>
-                  <div className="flex flex-wrap gap-3">
+                <div className="bg-gray-900 border border-gray-800/80 rounded-2xl p-5">
+                  <h2 className="text-white font-bold mb-4">Active boosts</h2>
+                  <div className="flex flex-wrap gap-2">
                     {purchased.map(id => {
                       const item = shopItems.find(i => i.id === id)
                       return (
-                        <div key={id} className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2">
+                        <div key={id} className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-2">
                           <span>{item.emoji}</span>
-                          <span className="text-white text-sm">{item.name}</span>
-                          <span className="text-green-400 text-xs font-medium">active</span>
+                          <span className="text-emerald-300 text-sm font-semibold">{item.name}</span>
+                          <span className="text-emerald-500 text-xs">active</span>
                         </div>
                       )
                     })}
                   </div>
                 </div>
               )}
-
             </div>
           )}
+        </div>
 
-        </div>
-        {/* Toast */}
-      {toast && (
-        <div className={`fixed bottom-6 right-6 px-6 py-4 rounded-2xl text-white text-sm font-medium z-50 ${
-          toast.type === 'success' ? 'bg-violet-600' : 'bg-red-600'
-        }`}>
-          {toast.message}
-        </div>
-      )}
+        {toast && (
+          <div className={`fixed bottom-6 right-6 px-6 py-4 rounded-2xl text-white text-sm font-bold z-50 shadow-2xl ${toast.type === 'success' ? 'bg-violet-600 shadow-violet-900/40' : 'bg-red-600 shadow-red-900/40'}`}>
+            {toast.message}
+          </div>
+        )}
       </div>
 
-      {/* Add Assignment Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 w-full max-w-md">
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gray-900 border border-gray-800/80 rounded-2xl p-8 w-full max-w-md shadow-2xl">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-white font-semibold text-lg">Add assignment</h2>
-              <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-white text-xl">✕</button>
+              <h2 className="text-white font-bold text-lg">Add assignment</h2>
+              <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-800 transition-colors">✕</button>
             </div>
             <div className="flex flex-col gap-4">
               <div>
-                <label className="text-gray-400 text-sm mb-1 block">Assignment name</label>
-                <input
-                  value={newAssignment.name}
-                  onChange={e => setNewAssignment({ ...newAssignment, name: e.target.value })}
-                  placeholder="e.g. A5 — Final Project"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-violet-500"
-                />
+                <label className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2 block">Assignment name</label>
+                <input value={newAssignment.name} onChange={e => setNewAssignment({ ...newAssignment, name: e.target.value })} placeholder="e.g. A5 — Final Project" className="w-full bg-gray-800/80 border border-gray-700/80 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10 transition-all" />
               </div>
               <div>
-                <label className="text-gray-400 text-sm mb-1 block">Difficulty</label>
-                <select
-                  value={newAssignment.difficulty}
-                  onChange={e => setNewAssignment({ ...newAssignment, difficulty: e.target.value })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500"
-                >
+                <label className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2 block">Difficulty</label>
+                <select value={newAssignment.difficulty} onChange={e => setNewAssignment({ ...newAssignment, difficulty: e.target.value })} className="w-full bg-gray-800/80 border border-gray-700/80 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500 transition-all">
                   <option>Easy</option>
                   <option>Medium</option>
                   <option>Hard</option>
                 </select>
               </div>
               <div>
-                <label className="text-gray-400 text-sm mb-1 block">Deadline</label>
-                <input
-                  type="date"
-                  value={newAssignment.deadline}
-                  onChange={e => setNewAssignment({ ...newAssignment, deadline: e.target.value })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500"
-                />
+                <label className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2 block">Deadline</label>
+                <input type="date" value={newAssignment.deadline} onChange={e => setNewAssignment({ ...newAssignment, deadline: e.target.value })} className="w-full bg-gray-800/80 border border-gray-700/80 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500 transition-all" />
               </div>
-              <button
-                onClick={handleAddAssignment}
-                className="w-full bg-violet-600 hover:bg-violet-500 text-white font-semibold py-3 rounded-xl transition-colors mt-2"
-              >
+              <button onClick={handleAddAssignment} className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-violet-900/30 mt-1">
                 Add assignment
               </button>
             </div>
@@ -457,59 +395,40 @@ function AssignmentRow({ assignment: a, onMarkDone, onGradeSubmit }) {
   const [showGradeInput, setShowGradeInput] = useState(false)
 
   return (
-    <tr className="border-b border-gray-800 last:border-0 hover:bg-gray-800 transition-colors">
-      <td className="px-6 py-4 text-white font-medium">{a.name}</td>
-      <td className="px-4 py-4">
-        <span className={`text-xs px-3 py-1 rounded-full font-medium ${diffColors[a.difficulty]}`}>{a.difficulty}</span>
+    <tr className="border-b border-gray-800/60 last:border-0 hover:bg-gray-800/40 transition-colors">
+      <td className="px-6 py-4 text-white font-semibold">{a.name}</td>
+      <td className="px-6 py-4">
+        <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${diffColors[a.difficulty]}`}>{a.difficulty}</span>
       </td>
-      <td className="px-4 py-4 text-gray-400 text-sm">{a.deadline}</td>
-      <td className="px-4 py-4">
+      <td className="px-6 py-4 text-gray-400 text-sm font-medium">{a.deadline}</td>
+      <td className="px-6 py-4">
         {a.grade !== null ? (
-          <span className={`text-sm font-semibold ${a.grade >= 90 ? 'text-green-400' : a.grade >= 75 ? 'text-violet-400' : 'text-amber-400'}`}>
-            {a.grade}%
-          </span>
+          <span className={`text-sm font-bold ${a.grade >= 90 ? 'text-emerald-400' : a.grade >= 75 ? 'text-violet-400' : 'text-amber-400'}`}>{a.grade}%</span>
         ) : showGradeInput ? (
           <div className="flex gap-2 items-center">
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={gradeInput}
-              onChange={e => setGradeInput(e.target.value)}
-              placeholder="0-100"
-              className="w-20 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-white text-xs focus:outline-none focus:border-violet-500"
-            />
-            <button
-              onClick={() => { onGradeSubmit(a.id, gradeInput); setShowGradeInput(false) }}
-              className="text-xs bg-violet-600 hover:bg-violet-500 text-white px-2 py-1 rounded-lg"
-            >
-              Save
-            </button>
+            <input type="number" min="0" max="100" value={gradeInput} onChange={e => setGradeInput(e.target.value)} placeholder="0-100" className="w-20 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-white text-xs focus:outline-none focus:border-violet-500" />
+            <button onClick={() => { onGradeSubmit(a.id, gradeInput); setShowGradeInput(false) }} className="text-xs bg-violet-600 hover:bg-violet-500 text-white px-2 py-1 rounded-lg font-semibold">Save</button>
           </div>
         ) : (
           <span className="text-gray-600 text-xs">—</span>
         )}
       </td>
-      <td className="px-4 py-4">
+      <td className="px-6 py-4">
         {a.xp !== null ? (
-          <span className="text-violet-400 text-sm font-semibold">+{a.xp} XP</span>
+          <span className="text-violet-400 text-sm font-bold">+{a.xp} XP</span>
         ) : (
           <span className="text-gray-600 text-xs">—</span>
         )}
       </td>
-      <td className="px-4 py-4">
+      <td className="px-6 py-4">
         {a.status === 'pending' && (
-          <button onClick={() => onMarkDone(a.id)} className="text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 px-3 py-1.5 rounded-lg transition-colors">
-            Mark submitted
-          </button>
+          <button onClick={() => onMarkDone(a.id)} className="text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700/80 text-gray-300 hover:text-white px-3 py-1.5 rounded-lg transition-colors font-medium">Mark submitted</button>
         )}
         {a.status === 'submitted' && !showGradeInput && (
-          <button onClick={() => setShowGradeInput(true)} className="text-xs bg-violet-900 hover:bg-violet-800 border border-violet-700 text-violet-300 px-3 py-1.5 rounded-lg transition-colors">
-            Enter grade
-          </button>
+          <button onClick={() => setShowGradeInput(true)} className="text-xs bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/30 text-violet-300 px-3 py-1.5 rounded-lg transition-colors font-semibold">Enter grade</button>
         )}
         {a.status === 'done' && (
-          <span className="text-green-400 text-xs font-medium">✓ Done</span>
+          <span className="text-emerald-400 text-xs font-bold">✓ Done</span>
         )}
       </td>
     </tr>
