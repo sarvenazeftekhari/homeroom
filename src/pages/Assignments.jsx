@@ -1,65 +1,109 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
+import { auth, db } from '../firebase'
+import {
+  collection,
+  onSnapshot,
+  addDoc,
+  updateDoc,
+  doc,
+  serverTimestamp,
+} from 'firebase/firestore'
+
+function calculateXP(grade, difficulty, deadline, submittedAt) {
+  const difficultyMultiplier = { Easy: 1, Medium: 1.5, Hard: 2 }
+  const baseXP = (grade / 100) * 200
+  const multiplier = difficultyMultiplier[difficulty] || 1
+  const deadlineDate = new Date(deadline)
+  const submittedDate = new Date(submittedAt)
+  const daysEarly = Math.max(0, (deadlineDate - submittedDate) / (1000 * 60 * 60 * 24))
+  const earlyBonus = Math.min(daysEarly * 10, 100)
+  return Math.round((baseXP + earlyBonus) * multiplier)
+}
 
 function Assignments() {
+  const navigate = useNavigate()
   const [showModal, setShowModal] = useState(false)
-  const [assignments, setAssignments] = useState([
-    { id: 1, name: 'A1 — Linked List', class: 'CS 246', difficulty: 'Easy', deadline: '2025-01-20', status: 'done', grade: 96, submittedAt: '2025-01-18', xp: 320 },
-    { id: 2, name: 'A2 — BST Algorithms', class: 'CS 246', difficulty: 'Medium', deadline: '2025-02-03', status: 'done', grade: 88, submittedAt: '2025-02-03', xp: 280 },
-    { id: 3, name: 'A3 — Design Patterns', class: 'CS 246', difficulty: 'Hard', deadline: '2025-02-24', status: 'done', grade: 81, submittedAt: '2025-02-24', xp: 380 },
-    { id: 4, name: 'A4 — Multithreading', class: 'CS 246', difficulty: 'Hard', deadline: '2025-03-30', status: 'submitted', grade: null, submittedAt: null, xp: null },
-    { id: 5, name: 'Assignment 1', class: 'MATH 235', difficulty: 'Medium', deadline: '2025-04-10', status: 'pending', grade: null, submittedAt: null, xp: null },
-    { id: 6, name: 'Midterm Essay', class: 'ECON 101', difficulty: 'Hard', deadline: '2025-04-05', status: 'pending', grade: null, submittedAt: null, xp: null },
-  ])
-
+  const [classes, setClasses] = useState([])        // { id, name, code, assignments: [] }
+  const [loading, setLoading] = useState(true)
+  const [selectedClass, setSelectedClass] = useState('all')
   const [newAssignment, setNewAssignment] = useState({
-    name: '', class: '', difficulty: 'Medium', deadline: ''
+    name: '', classId: '', difficulty: 'Medium', deadline: ''
   })
 
-  function calculateXP(grade, difficulty, deadline, submittedAt) {
-    const difficultyMultiplier = { Easy: 1, Medium: 1.5, Hard: 2 }
-    const baseXP = (grade / 100) * 200
-    const multiplier = difficultyMultiplier[difficulty] || 1
-    const deadlineDate = new Date(deadline)
-    const submittedDate = new Date(submittedAt)
-    const daysEarly = Math.max(0, (deadlineDate - submittedDate) / (1000 * 60 * 60 * 24))
-    const earlyBonus = Math.min(daysEarly * 10, 100)
-    return Math.round((baseXP + earlyBonus) * multiplier)
-  }
+  const uid = auth.currentUser?.uid
 
-  function handleAddAssignment() {
-    if (!newAssignment.name || !newAssignment.class || !newAssignment.deadline) return
-    const created = {
-      id: assignments.length + 1,
-      ...newAssignment,
+  useEffect(() => {
+    if (!uid) { navigate('/login'); return }
+
+    // Listen to classes
+    const unsubClasses = onSnapshot(collection(db, 'users', uid, 'classes'), classSnap => {
+      const classData = classSnap.docs.map(d => ({ id: d.id, ...d.data(), assignments: [] }))
+
+      // For each class, listen to its assignments subcollection
+      const unsubAssignments = classData.map(cls =>
+        onSnapshot(collection(db, 'users', uid, 'classes', cls.id, 'assignments'), aSnap => {
+          cls.assignments = aSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+          setClasses([...classData])
+        })
+      )
+
+      setLoading(false)
+      return () => unsubAssignments.forEach(u => u())
+    })
+
+    return () => unsubClasses()
+  }, [uid])
+
+  // ── ADD ────────────────────────────────────────────────────────────────
+  async function handleAddAssignment() {
+    if (!newAssignment.name || !newAssignment.classId || !newAssignment.deadline) return
+    await addDoc(collection(db, 'users', uid, 'classes', newAssignment.classId, 'assignments'), {
+      name: newAssignment.name,
+      difficulty: newAssignment.difficulty,
+      deadline: newAssignment.deadline,
       status: 'pending',
       grade: null,
       submittedAt: null,
       xp: null,
-    }
-    setAssignments([...assignments, created])
-    setNewAssignment({ name: '', class: '', difficulty: 'Medium', deadline: '' })
+      createdAt: serverTimestamp(),
+    })
+    setNewAssignment({ name: '', classId: '', difficulty: 'Medium', deadline: '' })
     setShowModal(false)
   }
 
-  function handleMarkDone(id) {
+  // ── MARK SUBMITTED ─────────────────────────────────────────────────────
+  async function handleMarkDone(classId, assignmentId) {
     const today = new Date().toISOString().split('T')[0]
-    setAssignments(assignments.map(a =>
-      a.id === id ? { ...a, status: 'submitted', submittedAt: today } : a
-    ))
+    await updateDoc(doc(db, 'users', uid, 'classes', classId, 'assignments', assignmentId), {
+      status: 'submitted',
+      submittedAt: today,
+    })
   }
 
-  function handleGradeSubmit(id, grade) {
-    const a = assignments.find(a => a.id === id)
+  // ── SUBMIT GRADE ───────────────────────────────────────────────────────
+  async function handleGradeSubmit(classId, assignmentId, grade) {
+    const cls = classes.find(c => c.id === classId)
+    const a = cls.assignments.find(a => a.id === assignmentId)
     const xp = calculateXP(grade, a.difficulty, a.deadline, a.submittedAt)
-    setAssignments(assignments.map(a =>
-      a.id === id ? { ...a, grade: Number(grade), status: 'done', xp } : a
-    ))
+    await updateDoc(doc(db, 'users', uid, 'classes', classId, 'assignments', assignmentId), {
+      grade: Number(grade),
+      status: 'done',
+      xp,
+    })
   }
 
-  const totalXP = assignments.reduce((sum, a) => sum + (a.xp || 0), 0)
-  const done = assignments.filter(a => a.status === 'done').length
-  const pending = assignments.filter(a => a.status === 'pending').length
+  // ── STATS (across all classes) ─────────────────────────────────────────
+  const allAssignments = classes.flatMap(c => c.assignments)
+  const totalXP = allAssignments.reduce((sum, a) => sum + (a.xp || 0), 0)
+  const done = allAssignments.filter(a => a.status === 'done').length
+  const pending = allAssignments.filter(a => a.status === 'pending').length
+
+  // ── FILTER ─────────────────────────────────────────────────────────────
+  const visibleClasses = selectedClass === 'all'
+    ? classes
+    : classes.filter(c => c.id === selectedClass)
 
   return (
     <div className="min-h-screen bg-gray-950 flex">
@@ -100,32 +144,75 @@ function Assignments() {
           </div>
         </div>
 
-        {/* Assignment table */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-800">
-                <th className="text-left text-gray-400 font-normal px-6 py-4">Assignment</th>
-                <th className="text-left text-gray-400 font-normal px-4 py-4">Class</th>
-                <th className="text-left text-gray-400 font-normal px-4 py-4">Difficulty</th>
-                <th className="text-left text-gray-400 font-normal px-4 py-4">Deadline</th>
-                <th className="text-left text-gray-400 font-normal px-4 py-4">Grade</th>
-                <th className="text-left text-gray-400 font-normal px-4 py-4">XP</th>
-                <th className="text-left text-gray-400 font-normal px-4 py-4">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {assignments.map(a => (
-                <AssignmentRow
-                  key={a.id}
-                  assignment={a}
-                  onMarkDone={handleMarkDone}
-                  onGradeSubmit={handleGradeSubmit}
-                />
-              ))}
-            </tbody>
-          </table>
+        {/* Class filter tabs */}
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => setSelectedClass('all')}
+            className={`px-4 py-1.5 rounded-xl text-sm transition-colors ${selectedClass === 'all' ? 'bg-violet-600 text-white' : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-white'}`}
+          >
+            All classes
+          </button>
+          {classes.map(c => (
+            <button
+              key={c.id}
+              onClick={() => setSelectedClass(c.id)}
+              className={`px-4 py-1.5 rounded-xl text-sm transition-colors ${selectedClass === c.id ? 'bg-violet-600 text-white' : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-white'}`}
+            >
+              {c.code || c.name}
+            </button>
+          ))}
         </div>
+
+        {/* Assignment tables grouped by class */}
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <p className="text-gray-500 text-sm">Loading assignments…</p>
+          </div>
+        ) : visibleClasses.length === 0 ? (
+          <div className="flex items-center justify-center py-16">
+            <p className="text-gray-500 text-sm">No classes found. Add classes in your profile.</p>
+          </div>
+        ) : (
+          visibleClasses.map(cls => (
+            <div key={cls.id} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+              {/* Class header */}
+              <div className="px-6 py-4 border-b border-gray-800 flex items-center gap-3">
+                <span className="text-white font-semibold">{cls.code}</span>
+                {cls.name && <span className="text-gray-500 text-sm">{cls.name}</span>}
+                <span className="ml-auto text-gray-600 text-xs">{cls.assignments.length} assignments</span>
+              </div>
+
+              {cls.assignments.length === 0 ? (
+                <div className="px-6 py-8 text-center">
+                  <p className="text-gray-600 text-sm">No assignments yet for this class.</p>
+                </div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-800">
+                      <th className="text-left text-gray-400 font-normal px-6 py-4">Assignment</th>
+                      <th className="text-left text-gray-400 font-normal px-4 py-4">Difficulty</th>
+                      <th className="text-left text-gray-400 font-normal px-4 py-4">Deadline</th>
+                      <th className="text-left text-gray-400 font-normal px-4 py-4">Grade</th>
+                      <th className="text-left text-gray-400 font-normal px-4 py-4">XP</th>
+                      <th className="text-left text-gray-400 font-normal px-4 py-4">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cls.assignments.map(a => (
+                      <AssignmentRow
+                        key={a.id}
+                        assignment={a}
+                        onMarkDone={(assignmentId) => handleMarkDone(cls.id, assignmentId)}
+                        onGradeSubmit={(assignmentId, grade) => handleGradeSubmit(cls.id, assignmentId, grade)}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          ))
+        )}
       </div>
 
       {/* Add Assignment Modal */}
@@ -149,12 +236,16 @@ function Assignments() {
               </div>
               <div>
                 <label className="text-gray-400 text-sm mb-1 block">Class</label>
-                <input
-                  value={newAssignment.class}
-                  onChange={e => setNewAssignment({ ...newAssignment, class: e.target.value })}
-                  placeholder="e.g. CS 246"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-violet-500"
-                />
+                <select
+                  value={newAssignment.classId}
+                  onChange={e => setNewAssignment({ ...newAssignment, classId: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500"
+                >
+                  <option value="">Select a class</option>
+                  {classes.map(c => (
+                    <option key={c.id} value={c.id}>{c.code}{c.name ? ` — ${c.name}` : ''}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="text-gray-400 text-sm mb-1 block">Difficulty</label>
@@ -206,7 +297,6 @@ function AssignmentRow({ assignment: a, onMarkDone, onGradeSubmit }) {
   return (
     <tr className="border-b border-gray-800 last:border-0 hover:bg-gray-800 transition-colors">
       <td className="px-6 py-4 text-white font-medium">{a.name}</td>
-      <td className="px-4 py-4 text-gray-400">{a.class}</td>
       <td className="px-4 py-4">
         <span className={`text-xs px-3 py-1 rounded-full font-medium ${diffColors[a.difficulty]}`}>
           {a.difficulty}

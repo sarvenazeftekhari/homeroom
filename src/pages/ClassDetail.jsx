@@ -1,74 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
-
-const classData = {
-  1: {
-    name: 'CS 246 — OOP',
-    instructor: 'Prof. Smith',
-    students: 34,
-    color: 'violet',
-    userXP: 980,
-    userRank: 2,
-    userLevel: 7,
-    nextLevelXP: 1200,
-    avgGrade: 87,
-    leaderboard: [
-      { rank: 1, initials: 'AK', name: 'Aarav K.', xp: 1240, avg: 94, color: 'violet' },
-      { rank: 2, initials: 'SE', name: 'You (Sarvenaz)', xp: 980, avg: 87, color: 'violet', isYou: true },
-      { rank: 3, initials: 'SL', name: 'Sara L.', xp: 870, avg: 91, color: 'teal' },
-      { rank: 4, initials: 'MR', name: 'Mike R.', xp: 760, avg: 83, color: 'amber' },
-      { rank: 5, initials: 'JT', name: 'Jake T.', xp: 650, avg: 79, color: 'red' },
-    ],
-    assignments: [
-      { id: 1, name: 'A1 — Linked List', difficulty: 'Easy', deadline: '2025-01-20', status: 'done', grade: 96, xp: 320 },
-      { id: 2, name: 'A2 — BST Algorithms', difficulty: 'Medium', deadline: '2025-02-03', status: 'done', grade: 88, xp: 280 },
-      { id: 3, name: 'A3 — Design Patterns', difficulty: 'Hard', deadline: '2025-02-24', status: 'done', grade: 81, xp: 380 },
-      { id: 4, name: 'A4 — Multithreading', difficulty: 'Hard', deadline: '2025-03-30', status: 'submitted', grade: null, xp: null },
-    ],
-  },
-  2: {
-    name: 'MATH 235 — Linear Algebra',
-    instructor: 'Prof. Jones',
-    students: 28,
-    color: 'teal',
-    userXP: 740,
-    userRank: 1,
-    userLevel: 6,
-    nextLevelXP: 900,
-    avgGrade: 91,
-    leaderboard: [
-      { rank: 1, initials: 'SE', name: 'You (Sarvenaz)', xp: 740, avg: 91, color: 'teal', isYou: true },
-      { rank: 2, initials: 'PM', name: 'Priya M.', xp: 690, avg: 88, color: 'violet' },
-      { rank: 3, initials: 'CW', name: 'Chris W.', xp: 610, avg: 85, color: 'amber' },
-    ],
-    assignments: [
-      { id: 1, name: 'Assignment 1', difficulty: 'Medium', deadline: '2025-02-10', status: 'done', grade: 91, xp: 260 },
-      { id: 2, name: 'Assignment 2', difficulty: 'Hard', deadline: '2025-03-01', status: 'done', grade: 88, xp: 340 },
-      { id: 3, name: 'Assignment 3', difficulty: 'Medium', deadline: '2025-04-10', status: 'pending', grade: null, xp: null },
-    ],
-  },
-  3: {
-    name: 'ECON 101 — Micro',
-    instructor: 'Prof. Lee',
-    students: 120,
-    color: 'amber',
-    userXP: 420,
-    userRank: 14,
-    userLevel: 4,
-    nextLevelXP: 600,
-    avgGrade: 83,
-    leaderboard: [
-      { rank: 1, initials: 'NS', name: 'Nina S.', xp: 890, avg: 96, color: 'violet' },
-      { rank: 2, initials: 'AK', name: 'Aarav K.', xp: 820, avg: 93, color: 'teal' },
-      { rank: 14, initials: 'SE', name: 'You (Sarvenaz)', xp: 420, avg: 83, color: 'amber', isYou: true },
-    ],
-    assignments: [
-      { id: 1, name: 'Problem Set 1', difficulty: 'Easy', deadline: '2025-02-01', status: 'done', grade: 83, xp: 180 },
-      { id: 2, name: 'Midterm Essay', difficulty: 'Hard', deadline: '2025-04-05', status: 'pending', grade: null, xp: null },
-    ],
-  },
-}
+import { auth, db } from '../firebase'
+import {
+  doc,
+  getDoc,
+  collection,
+  onSnapshot,
+  addDoc,
+  updateDoc,
+  serverTimestamp,
+} from 'firebase/firestore'
 
 const diffColors = {
   Easy: 'bg-green-900 text-green-300',
@@ -83,43 +25,103 @@ const avatarColors = {
   red: 'bg-red-900 text-red-200',
 }
 
+const CARD_COLORS = ['violet', 'teal', 'amber', 'blue', 'rose', 'green']
+
 const headerColors = {
   violet: 'bg-violet-600',
   teal: 'bg-teal-600',
   amber: 'bg-amber-600',
+  blue: 'bg-blue-600',
+  rose: 'bg-rose-600',
+  green: 'bg-green-600',
+}
+
+function calculateXP(grade, difficulty, deadline, submittedAt) {
+  const difficultyMultiplier = { Easy: 1, Medium: 1.5, Hard: 2 }
+  const baseXP = (grade / 100) * 200
+  const multiplier = difficultyMultiplier[difficulty] || 1
+  const deadlineDate = new Date(deadline)
+  const submittedDate = new Date(submittedAt)
+  const daysEarly = Math.max(0, (deadlineDate - submittedDate) / (1000 * 60 * 60 * 24))
+  const earlyBonus = Math.min(daysEarly * 10, 100)
+  return Math.round((baseXP + earlyBonus) * multiplier)
 }
 
 function ClassDetail() {
-  const { id } = useParams()
+  const { id: classId } = useParams()
   const navigate = useNavigate()
-  const cls = classData[id]
+  const uid = auth.currentUser?.uid
+
+  const [cls, setCls] = useState(null)
+  const [assignments, setAssignments] = useState([])
+  const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('assignments')
-  const [xp, setXp] = useState(cls.userXP)
+  const [showModal, setShowModal] = useState(false)
+  const [newAssignment, setNewAssignment] = useState({ name: '', difficulty: 'Medium', deadline: '' })
   const [purchased, setPurchased] = useState([])
   const [toast, setToast] = useState(null)
-  const [showModal, setShowModal] = useState(false)
-  const [assignments, setAssignments] = useState(cls.assignments)
-  const [newAssignment, setNewAssignment] = useState({ name: '', difficulty: 'Medium', deadline: '' })
 
-  if (!cls) return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-      <p className="text-white">Class not found.</p>
-    </div>
-  )
+  useEffect(() => {
+    if (!uid) { navigate('/login'); return }
 
-  function handleMarkDone(id) {
+    // Load class doc
+    getDoc(doc(db, 'users', uid, 'classes', classId)).then(snap => {
+      if (!snap.exists()) { navigate('/classes'); return }
+      setCls({ id: snap.id, ...snap.data() })
+      setLoading(false)
+    })
+
+    // Real-time assignments listener
+    const unsub = onSnapshot(
+      collection(db, 'users', uid, 'classes', classId, 'assignments'),
+      snap => setAssignments(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    )
+    return () => unsub()
+  }, [uid, classId])
+
+  // ── ADD ────────────────────────────────────────────────────────────────
+  async function handleAddAssignment() {
+    if (!newAssignment.name || !newAssignment.deadline) return
+    await addDoc(collection(db, 'users', uid, 'classes', classId, 'assignments'), {
+      ...newAssignment,
+      status: 'pending',
+      grade: null,
+      submittedAt: null,
+      xp: null,
+      createdAt: serverTimestamp(),
+    })
+    setNewAssignment({ name: '', difficulty: 'Medium', deadline: '' })
+    setShowModal(false)
+  }
+
+  // ── MARK SUBMITTED ─────────────────────────────────────────────────────
+  async function handleMarkDone(assignmentId) {
     const today = new Date().toISOString().split('T')[0]
-    setAssignments(assignments.map(a =>
-      a.id === id ? { ...a, status: 'submitted', submittedAt: today } : a
-    ))
+    await updateDoc(doc(db, 'users', uid, 'classes', classId, 'assignments', assignmentId), {
+      status: 'submitted',
+      submittedAt: today,
+    })
   }
 
-  function handleGradeSubmit(id, grade) {
-    setAssignments(assignments.map(a =>
-      a.id === id ? { ...a, grade: Number(grade), status: 'done', xp: Math.round((grade / 100) * 200 * (a.difficulty === 'Hard' ? 2 : a.difficulty === 'Medium' ? 1.5 : 1)) } : a
-    ))
+  // ── SUBMIT GRADE ───────────────────────────────────────────────────────
+  async function handleGradeSubmit(assignmentId, grade) {
+    const a = assignments.find(a => a.id === assignmentId)
+    const xp = calculateXP(grade, a.difficulty, a.deadline, a.submittedAt)
+    await updateDoc(doc(db, 'users', uid, 'classes', classId, 'assignments', assignmentId), {
+      grade: Number(grade),
+      status: 'done',
+      xp,
+    })
   }
 
+  // ── DERIVED STATS ──────────────────────────────────────────────────────
+  const totalXP = assignments.reduce((sum, a) => sum + (a.xp || 0), 0)
+  const gradedAssignments = assignments.filter(a => a.grade !== null)
+  const avgGrade = gradedAssignments.length > 0
+    ? Math.round(gradedAssignments.reduce((sum, a) => sum + a.grade, 0) / gradedAssignments.length)
+    : null
+
+  // ── SHOP ───────────────────────────────────────────────────────────────
   const shopItems = [
     { id: 1, name: 'XP Booster', description: 'Double your XP on your next submitted assignment', cost: 300, emoji: '⚡', color: 'violet' },
     { id: 2, name: 'Deadline Shield', description: 'Extend any assignment deadline by 24 hours without penalty', cost: 500, emoji: '🛡️', color: 'teal' },
@@ -137,35 +139,35 @@ function ClassDetail() {
   }
 
   function handleBuy(item) {
-    if (xp < item.cost) {
+    if (totalXP < item.cost) {
       showToast(`Not enough XP to buy ${item.name}!`, 'error')
       return
     }
-    setXp(xp - item.cost)
-    setPurchased([...purchased, item.id])
+    setPurchased(prev => [...prev, item.id])
     showToast(`${item.emoji} ${item.name} activated!`, 'success')
   }
 
   function showToast(message, type) {
     setToast({ message, type })
     setTimeout(() => setToast(null), 3000)
-  } 
-
-  function handleAddAssignment() {
-    if (!newAssignment.name || !newAssignment.deadline) return
-    setAssignments([...assignments, {
-      id: assignments.length + 1,
-      ...newAssignment,
-      status: 'pending',
-      grade: null,
-      xp: null,
-    }])
-    setNewAssignment({ name: '', difficulty: 'Medium', deadline: '' })
-    setShowModal(false)
   }
 
-  const totalXP = assignments.reduce((sum, a) => sum + (a.xp || 0), 0)
-  const progressPct = Math.min(Math.round((cls.userXP / cls.nextLevelXP) * 100), 100)
+  // ── COLOR ──────────────────────────────────────────────────────────────
+  // Derive a consistent color from the classId so it matches Classes.jsx
+  const colorIndex = classId ? classId.charCodeAt(0) % CARD_COLORS.length : 0
+  const color = CARD_COLORS[colorIndex]
+
+  if (loading) return (
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <p className="text-gray-500 text-sm">Loading class…</p>
+    </div>
+  )
+
+  if (!cls) return (
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <p className="text-white">Class not found.</p>
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-gray-950 flex">
@@ -174,15 +176,17 @@ function ClassDetail() {
       <div className="ml-56 flex-1 flex flex-col">
 
         {/* Class header banner */}
-        <div className={`${headerColors[cls.color]} px-8 py-6`}>
+        <div className={`${headerColors[color]} px-8 py-6`}>
           <button
             onClick={() => navigate('/classes')}
             className="text-white text-sm opacity-70 hover:opacity-100 mb-3 block"
           >
             ← Back to classes
           </button>
-          <h1 className="text-white text-2xl font-semibold">{cls.name}</h1>
-          <p className="text-white opacity-70 text-sm mt-1">{cls.instructor} · {cls.students} students</p>
+          <h1 className="text-white text-2xl font-semibold">
+            {cls.code}{cls.name ? ` — ${cls.name}` : ''}
+          </h1>
+          <p className="text-white opacity-70 text-sm mt-1">{assignments.length} assignments</p>
         </div>
 
         <div className="p-8 flex flex-col gap-6">
@@ -190,47 +194,40 @@ function ClassDetail() {
           {/* Stat cards */}
           <div className="grid grid-cols-4 gap-4">
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-              <p className="text-gray-400 text-xs mb-2">Your XP</p>
-              <p className="text-white text-2xl font-semibold">{cls.userXP}</p>
+              <p className="text-gray-400 text-xs mb-2">Total XP</p>
+              <p className="text-white text-2xl font-semibold">{totalXP}</p>
               <p className="text-violet-400 text-xs mt-1">in this class</p>
             </div>
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-              <p className="text-gray-400 text-xs mb-2">Class rank</p>
-              <p className="text-white text-2xl font-semibold">#{cls.userRank}</p>
-              <p className="text-violet-400 text-xs mt-1">out of {cls.students}</p>
+              <p className="text-gray-400 text-xs mb-2">Assignments</p>
+              <p className="text-white text-2xl font-semibold">{assignments.length}</p>
+              <p className="text-violet-400 text-xs mt-1">total</p>
             </div>
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
               <p className="text-gray-400 text-xs mb-2">Avg grade</p>
-              <p className="text-white text-2xl font-semibold">{cls.avgGrade}%</p>
-              <p className="text-violet-400 text-xs mt-1">this class</p>
+              <p className="text-white text-2xl font-semibold">{avgGrade !== null ? `${avgGrade}%` : '—'}</p>
+              <p className="text-violet-400 text-xs mt-1">graded assignments</p>
             </div>
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-              <p className="text-gray-400 text-xs mb-2">Level</p>
-              <p className="text-white text-2xl font-semibold">Lv. {cls.userLevel}</p>
-              <p className="text-violet-400 text-xs mt-1">{cls.nextLevelXP - cls.userXP} XP to next</p>
+              <p className="text-gray-400 text-xs mb-2">Pending</p>
+              <p className="text-white text-2xl font-semibold">
+                {assignments.filter(a => a.status === 'pending').length}
+              </p>
+              <p className="text-amber-400 text-xs mt-1">still to do</p>
             </div>
           </div>
 
           {/* Tabs */}
           <div className="flex gap-2">
-            <button
-              onClick={() => setTab('assignments')}
-              className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors ${tab === 'assignments' ? 'bg-violet-600 text-white' : 'bg-gray-900 text-gray-400 hover:text-white border border-gray-800'}`}
-            >
-              Assignments
-            </button>
-            <button
-              onClick={() => setTab('leaderboard')}
-              className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors ${tab === 'leaderboard' ? 'bg-violet-600 text-white' : 'bg-gray-900 text-gray-400 hover:text-white border border-gray-800'}`}
-            >
-              Leaderboard
-            </button>
-            <button
-              onClick={() => setTab('shop')}
-              className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors ${tab === 'shop' ? 'bg-violet-600 text-white' : 'bg-gray-900 text-gray-400 hover:text-white border border-gray-800'}`}
-            >
-              Point Shop
-            </button>
+            {['assignments', 'leaderboard', 'shop'].map(t => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors capitalize ${tab === t ? 'bg-violet-600 text-white' : 'bg-gray-900 text-gray-400 hover:text-white border border-gray-800'}`}
+              >
+                {t === 'shop' ? 'Point Shop' : t.charAt(0).toUpperCase() + t.slice(1)}
+              </button>
+            ))}
           </div>
 
           {/* Assignments tab */}
@@ -245,92 +242,60 @@ function ClassDetail() {
                   + Add assignment
                 </button>
               </div>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-800">
-                    <th className="text-left text-gray-400 font-normal px-6 py-3">Name</th>
-                    <th className="text-left text-gray-400 font-normal px-4 py-3">Difficulty</th>
-                    <th className="text-left text-gray-400 font-normal px-4 py-3">Deadline</th>
-                    <th className="text-left text-gray-400 font-normal px-4 py-3">Grade</th>
-                    <th className="text-left text-gray-400 font-normal px-4 py-3">XP</th>
-                    <th className="text-left text-gray-400 font-normal px-4 py-3">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {assignments.map(a => (
-                    <AssignmentRow key={a.id} assignment={a} onMarkDone={handleMarkDone} onGradeSubmit={handleGradeSubmit} />
-                  ))}
-                </tbody>
-              </table>
+              {assignments.length === 0 ? (
+                <div className="flex items-center justify-center py-12">
+                  <p className="text-gray-600 text-sm">No assignments yet. Add one to get started!</p>
+                </div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-800">
+                      <th className="text-left text-gray-400 font-normal px-6 py-3">Name</th>
+                      <th className="text-left text-gray-400 font-normal px-4 py-3">Difficulty</th>
+                      <th className="text-left text-gray-400 font-normal px-4 py-3">Deadline</th>
+                      <th className="text-left text-gray-400 font-normal px-4 py-3">Grade</th>
+                      <th className="text-left text-gray-400 font-normal px-4 py-3">XP</th>
+                      <th className="text-left text-gray-400 font-normal px-4 py-3">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {assignments.map(a => (
+                      <AssignmentRow
+                        key={a.id}
+                        assignment={a}
+                        onMarkDone={handleMarkDone}
+                        onGradeSubmit={handleGradeSubmit}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           )}
 
-          {/* Leaderboard tab */}
+          {/* Leaderboard tab — placeholder until you add shared leaderboard logic */}
           {tab === 'leaderboard' && (
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-800">
-                <h2 className="text-white font-medium">Class Leaderboard</h2>
-              </div>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-800">
-                    <th className="text-left text-gray-400 font-normal px-6 py-3">Rank</th>
-                    <th className="text-left text-gray-400 font-normal px-4 py-3">Student</th>
-                    <th className="text-left text-gray-400 font-normal px-4 py-3">Avg Grade</th>
-                    <th className="text-left text-gray-400 font-normal px-4 py-3">XP</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cls.leaderboard.map(player => (
-                    <tr
-                      key={player.rank}
-                      className={`border-b border-gray-800 last:border-0 ${player.isYou ? 'bg-violet-950' : 'hover:bg-gray-800'} transition-colors`}
-                    >
-                      <td className="px-6 py-4">
-                        <span className={`font-semibold ${player.rank <= 3 ? 'text-violet-400' : 'text-gray-500'}`}>#{player.rank}</span>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${avatarColors[player.color]}`}>
-                            {player.initials}
-                          </div>
-                          <span className={`font-medium ${player.isYou ? 'text-violet-300' : 'text-white'}`}>
-                            {player.name}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className={`font-medium ${player.avg >= 90 ? 'text-green-400' : player.avg >= 80 ? 'text-violet-400' : 'text-amber-400'}`}>
-                          {player.avg}%
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 text-violet-400 font-semibold">{player.xp} XP</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-10 flex items-center justify-center">
+              <p className="text-gray-500 text-sm">Leaderboard coming soon.</p>
             </div>
           )}
 
           {/* Point Shop tab */}
           {tab === 'shop' && (
             <div className="flex flex-col gap-6">
-
-              {/* XP balance */}
               <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 flex items-center justify-between">
                 <div>
                   <p className="text-gray-400 text-sm">Your XP balance in this class</p>
-                  <p className="text-white text-3xl font-semibold mt-1">{xp} XP</p>
+                  <p className="text-white text-3xl font-semibold mt-1">{totalXP} XP</p>
                 </div>
                 <div className="text-4xl">🏦</div>
               </div>
 
-              {/* Shop items */}
               <div className="grid grid-cols-3 gap-4">
                 {shopItems.map(item => {
                   const styles = shopColors[item.color]
                   const bought = purchased.includes(item.id)
-                  const canAfford = xp >= item.cost
+                  const canAfford = totalXP >= item.cost
                   return (
                     <div
                       key={item.id}
@@ -351,11 +316,9 @@ function ClassDetail() {
                           onClick={() => handleBuy(item)}
                           disabled={bought || !canAfford}
                           className={`text-xs text-white font-medium px-3 py-1.5 rounded-xl transition-colors ${
-                            bought
-                              ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                              : !canAfford
-                              ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                              : styles.button
+                            bought ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                            : !canAfford ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                            : styles.button
                           }`}
                         >
                           {bought ? '✓ Active' : !canAfford ? 'Not enough XP' : 'Buy'}
@@ -366,7 +329,6 @@ function ClassDetail() {
                 })}
               </div>
 
-              {/* Active boosts */}
               {purchased.length > 0 && (
                 <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
                   <h2 className="text-white font-medium mb-4">Active boosts</h2>
@@ -384,19 +346,19 @@ function ClassDetail() {
                   </div>
                 </div>
               )}
-
             </div>
           )}
 
         </div>
+
         {/* Toast */}
-      {toast && (
-        <div className={`fixed bottom-6 right-6 px-6 py-4 rounded-2xl text-white text-sm font-medium z-50 ${
-          toast.type === 'success' ? 'bg-violet-600' : 'bg-red-600'
-        }`}>
-          {toast.message}
-        </div>
-      )}
+        {toast && (
+          <div className={`fixed bottom-6 right-6 px-6 py-4 rounded-2xl text-white text-sm font-medium z-50 ${
+            toast.type === 'success' ? 'bg-violet-600' : 'bg-red-600'
+          }`}>
+            {toast.message}
+          </div>
+        )}
       </div>
 
       {/* Add Assignment Modal */}
@@ -456,13 +418,17 @@ function AssignmentRow({ assignment: a, onMarkDone, onGradeSubmit }) {
   const [gradeInput, setGradeInput] = useState('')
   const [showGradeInput, setShowGradeInput] = useState(false)
 
+  const isOverdue = new Date(a.deadline) < new Date() && a.status === 'pending'
+
   return (
     <tr className="border-b border-gray-800 last:border-0 hover:bg-gray-800 transition-colors">
       <td className="px-6 py-4 text-white font-medium">{a.name}</td>
       <td className="px-4 py-4">
         <span className={`text-xs px-3 py-1 rounded-full font-medium ${diffColors[a.difficulty]}`}>{a.difficulty}</span>
       </td>
-      <td className="px-4 py-4 text-gray-400 text-sm">{a.deadline}</td>
+      <td className={`px-4 py-4 text-sm ${isOverdue ? 'text-red-400' : 'text-gray-400'}`}>
+        {a.deadline} {isOverdue && '⚠️'}
+      </td>
       <td className="px-4 py-4">
         {a.grade !== null ? (
           <span className={`text-sm font-semibold ${a.grade >= 90 ? 'text-green-400' : a.grade >= 75 ? 'text-violet-400' : 'text-amber-400'}`}>

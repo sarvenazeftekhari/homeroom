@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { auth } from '../firebase'
+import { auth, db } from '../firebase'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 
 function Login() {
   const navigate = useNavigate()
@@ -17,11 +18,31 @@ function Login() {
 
     try {
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password)
+        // Create auth user
+        const { user } = await createUserWithEmailAndPassword(auth, email, password)
+
+        // Create user profile doc in Firestore
+        await setDoc(doc(db, 'users', user.uid), {
+          email: user.email,
+          createdAt: serverTimestamp(),
+        })
+
+        // New user → onboarding
+        navigate('/onboarding')
+
       } else {
-        await signInWithEmailAndPassword(auth, email, password)
+        const { user } = await signInWithEmailAndPassword(auth, email, password)
+
+        // Check if they completed onboarding
+        const profile = await getDoc(doc(db, 'users', user.uid))
+        const data = profile.data()
+
+        if (!data?.onboardingComplete) {
+          navigate('/onboarding')
+        } else {
+          navigate('/dashboard')
+        }
       }
-      navigate('/dashboard')
     } catch (err) {
       if (err.code === 'auth/invalid-email') setError('Invalid email address.')
       else if (err.code === 'auth/wrong-password') setError('Wrong password.')
@@ -38,7 +59,6 @@ function Login() {
     <div className="min-h-screen bg-gray-950 flex items-center justify-center">
       <div className="bg-gray-900 border border-gray-800 rounded-2xl p-10 w-full max-w-md">
 
-        {/* Logo */}
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 bg-violet-600 rounded-xl flex items-center justify-center text-white font-semibold text-lg">
             HR
@@ -46,7 +66,6 @@ function Login() {
           <span className="text-white text-2xl font-semibold">HomeRoom</span>
         </div>
 
-        {/* Title */}
         <h1 className="text-white text-2xl font-semibold mb-1">
           {isSignUp ? 'Create an account' : 'Welcome back'}
         </h1>
@@ -54,14 +73,12 @@ function Login() {
           {isSignUp ? 'Sign up to start earning XP' : 'Sign in to your account to continue'}
         </p>
 
-        {/* Error message */}
         {error && (
           <div className="bg-red-900 border border-red-700 text-red-300 text-sm rounded-xl px-4 py-3 mb-4">
             {error}
           </div>
         )}
 
-        {/* Form */}
         <div className="flex flex-col gap-4">
           <div>
             <label className="text-gray-400 text-sm mb-1 block">Email</label>
@@ -93,7 +110,6 @@ function Login() {
           </button>
         </div>
 
-        {/* Toggle sign up / sign in */}
         <p className="text-gray-500 text-sm text-center mt-6">
           {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
           <span
@@ -103,7 +119,6 @@ function Login() {
             {isSignUp ? 'Sign in' : 'Sign up'}
           </span>
         </p>
-
       </div>
     </div>
   )
