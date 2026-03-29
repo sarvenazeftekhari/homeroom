@@ -5,6 +5,7 @@ import Classes from './pages/Classes'
 import Assignments from './pages/Assignments'
 import Leaderboard from './pages/Leaderboard'
 import Shop from './pages/Shop'
+import ClassDetail from './pages/ClassDetail'
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/classes" element={<Classes />} />
+        <Route path="/classes/:id" element={<ClassDetail />} />
         <Route path="/assignments" element={<Assignments />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/shop" element={<Shop />} />
