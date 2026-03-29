@@ -47,7 +47,9 @@ function Dashboard() {
           <div>
             <div className="flex items-center gap-4">
                 <img src="/bird.png" alt="HomeRoom mascot" className="w-16 h-16 object-contain" />
-                <h1 className="text-white text-2xl font-semibold">Hey, Neil 👋🏻</h1>
+                <h1 className="text-white text-2xl font-semibold">
+                    Hey, {localStorage.getItem('hr_first_name') || 'there'} 👋🏻
+                </h1>
             </div>
             <p className="text-gray-400 text-sm mt-1">Here's what's going on today</p>
           </div>

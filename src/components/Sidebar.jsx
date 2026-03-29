@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom'
 function Sidebar({ active }) {
   const navigate = useNavigate()
 
+  const firstName = localStorage.getItem('hr_first_name') || 'You'
+  const lastName = localStorage.getItem('hr_last_name') || ''
+  const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
+
   const items = [
     { label: 'Dashboard', path: '/dashboard' },
     { label: 'My Classes', path: '/classes' },
@@ -36,13 +40,16 @@ function Sidebar({ active }) {
       ))}
 
       {/* User at bottom */}
-      <div className="mt-auto border-t border-gray-800 pt-4 px-2 flex items-center gap-3">
+      <div
+        onClick={() => navigate('/profile')}
+        className="mt-auto border-t border-gray-800 pt-4 px-2 flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+      >
         <div className="w-8 h-8 bg-violet-800 rounded-full flex items-center justify-center text-violet-200 text-xs font-semibold">
-          SE
+          {initials}
         </div>
         <div>
-          <p className="text-white text-sm font-medium">Sarvenaz E.</p>
-          <p className="text-violet-400 text-xs">2,480 XP</p>
+          <p className="text-white text-sm font-medium">{firstName} {lastName}</p>
+          <p className="text-violet-400 text-xs">View profile →</p>
         </div>
       </div>
     </div>
