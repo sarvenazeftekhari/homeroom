@@ -44,14 +44,14 @@ function Dashboard() {
 
         {/* Header */}
         <div className="flex justify-between items-center">
-          <div>
-            <div className="flex items-center gap-4">
-                <img src="/bird.png" alt="HomeRoom mascot" className="w-16 h-16 object-contain" />
-                <h1 className="text-white text-2xl font-semibold">
-                    Hey, {localStorage.getItem('hr_first_name') || 'there'} 👋🏻
-                </h1>
+          <div className="flex items-center gap-5">
+            <img src="/bird.png" alt="HomeRoom mascot" className="w-20 h-20 object-contain" />
+            <div>
+              <h1 className="text-white text-4xl font-bold tracking-tight">HomeRoom</h1>
+              <p className="text-gray-300 text-lg mt-1">
+                Hey, {localStorage.getItem('hr_first_name') || 'there'} 👋🏻
+              </p>
             </div>
-            <p className="text-gray-400 text-sm mt-1">Here's what's going on today</p>
           </div>
         </div>
 
