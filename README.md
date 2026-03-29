@@ -14,7 +14,7 @@ The better your grade and the earlier you submit, the more XP you earn. Each cla
 
 ## Features
 
-- **Account creation & login** - real authentication powered by Firebase
+- **Account creation & login** — real authentication powered by Firebase
 - **Classes** — join or create classes, each with their own leaderboard and assignments
 - **Assignments** — add assignments, mark them as submitted, enter your grade, and watch your XP calculate automatically
 - **XP System** — points are calculated based on your grade, how early you submitted, and the difficulty of the assignment
