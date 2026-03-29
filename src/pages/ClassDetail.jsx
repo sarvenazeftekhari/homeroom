@@ -4,8 +4,8 @@ import Sidebar from '../components/Sidebar'
 
 const classData = {
   1: {
-    name: 'CS 246 — OOP',
-    instructor: 'Prof. Smith',
+    name: 'CP264: Data Structures II',
+    instructor: 'Prof. Fan',
     students: 34,
     color: 'violet',
     userXP: 980,
@@ -21,15 +21,15 @@ const classData = {
       { rank: 5, initials: 'JT', name: 'Jake T.', xp: 650, avg: 79, color: 'red' },
     ],
     assignments: [
-      { id: 1, name: 'A1 — Linked List', difficulty: 'Easy', deadline: '2025-01-20', status: 'done', grade: 96, xp: 320 },
-      { id: 2, name: 'A2 — BST Algorithms', difficulty: 'Medium', deadline: '2025-02-03', status: 'done', grade: 88, xp: 280 },
-      { id: 3, name: 'A3 — Design Patterns', difficulty: 'Hard', deadline: '2025-02-24', status: 'done', grade: 81, xp: 380 },
-      { id: 4, name: 'A4 — Multithreading', difficulty: 'Hard', deadline: '2025-03-30', status: 'submitted', grade: null, xp: null },
+      { id: 1, name: 'A1 - Linked List', difficulty: 'Easy', deadline: '2025-01-20', status: 'done', grade: 96, xp: 320 },
+      { id: 2, name: 'A2 - BST Algorithms', difficulty: 'Medium', deadline: '2025-02-03', status: 'done', grade: 88, xp: 280 },
+      { id: 3, name: 'A3 - Design Patterns', difficulty: 'Hard', deadline: '2025-02-24', status: 'done', grade: 81, xp: 380 },
+      { id: 4, name: 'A4 - Multithreading', difficulty: 'Hard', deadline: '2025-03-30', status: 'submitted', grade: null, xp: null },
     ],
   },
   2: {
-    name: 'MATH 235 — Linear Algebra',
-    instructor: 'Prof. Jones',
+    name: 'MA122: Linear Algebra',
+    instructor: 'Prof. Zhang',
     students: 28,
     color: 'teal',
     userXP: 740,
@@ -49,8 +49,8 @@ const classData = {
     ],
   },
   3: {
-    name: 'ECON 101 — Micro',
-    instructor: 'Prof. Lee',
+    name: 'EC120: Microeconomics',
+    instructor: 'Prof. Schirle',
     students: 120,
     color: 'amber',
     userXP: 420,

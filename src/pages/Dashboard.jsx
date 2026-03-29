@@ -2,20 +2,20 @@ import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 
 const classes = [
-  { id: 1, name: 'CS 246 — OOP', instructor: 'Prof. Smith', students: 34, rank: 2, xp: 980, pending: 2, color: 'violet' },
-  { id: 2, name: 'MATH 235 — Linear Algebra', instructor: 'Prof. Jones', students: 28, rank: 1, xp: 740, pending: 0, color: 'teal' },
-  { id: 3, name: 'ECON 101 — Micro', instructor: 'Prof. Lee', students: 120, rank: 14, xp: 420, pending: 1, color: 'amber' },
+  { id: 1, name: 'CP264: Data Structures II', instructor: 'Prof. Fan', students: 34, rank: 2, xp: 980, pending: 2, color: 'violet' },
+  { id: 2, name: 'MA122: Linear Algebra', instructor: 'Prof. Zhang', students: 28, rank: 1, xp: 740, pending: 0, color: 'teal' },
+  { id: 3, name: 'EC120: Microeconomics', instructor: 'Prof. Schirle', students: 120, rank: 14, xp: 420, pending: 1, color: 'amber' },
 ]
 
 const friends = [
-  { initials: 'AK', name: 'Aarav K.', status: 'Submitted A4 in CS 246', color: 'violet', online: true },
-  { initials: 'SL', name: 'Sara L.', status: 'Earned 280 XP in MATH 235', color: 'teal', online: true },
-  { initials: 'MR', name: 'Mike R.', status: 'Offline', color: 'amber', online: false },
-  { initials: 'JT', name: 'Jake T.', status: 'Completed Midterm Essay', color: 'red', online: true },
+  { initials: 'NH', name: 'Nolan H.', status: 'Submitted A4 in CP264', color: 'violet', online: true },
+  { initials: 'NF', name: 'Neil F.', status: 'Earned 280 XP in MA122', color: 'teal', online: true },
+  { initials: 'BJ', name: 'Ben J.', status: 'Offline', color: 'amber', online: false },
+  { initials: 'SE', name: 'Sarv E.', status: 'Completed Midterm Essay', color: 'red', online: true },
 ]
 
 const upcomingDeadlines = [
-  { name: 'A4 — Multithreading', class: 'CS 246', deadline: 'Mar 30', urgent: true },
+  { name: 'A4 - Multithreading', class: 'CS 246', deadline: 'Mar 30', urgent: true },
   { name: 'Midterm Essay', class: 'ECON 101', deadline: 'Apr 5', urgent: true },
   { name: 'Assignment 1', class: 'MATH 235', deadline: 'Apr 10', urgent: false },
 ]

@@ -2,11 +2,11 @@ import { useState } from 'react'
 import Sidebar from '../components/Sidebar'
 
 const friends = [
-  { id: 1, initials: 'AK', name: 'Aarav K.', email: 'aarav@example.com', online: true, status: 'Submitted A4 in CS 246', classes: ['CS 246', 'MATH 235'], color: 'violet' },
-  { id: 2, initials: 'SL', name: 'Sara L.', email: 'sara@example.com', online: true, status: 'Earned 280 XP in MATH 235', classes: ['MATH 235', 'ECON 101'], color: 'teal' },
-  { id: 3, initials: 'MR', name: 'Mike R.', email: 'mike@example.com', online: false, status: 'Offline', classes: ['CS 246'], color: 'amber' },
-  { id: 4, initials: 'JT', name: 'Jake T.', email: 'jake@example.com', online: true, status: 'Completed Midterm Essay', classes: ['ECON 101', 'CS 246'], color: 'red' },
-  { id: 5, initials: 'PM', name: 'Priya M.', email: 'priya@example.com', online: false, status: 'Offline', classes: ['MATH 235'], color: 'violet' },
+  { id: 1, initials: 'NH', name: 'Nolan H.', email: 'nolan@example.com', online: true, status: 'Submitted A4 in CP264', classes: ['CP264', 'MA122'], color: 'violet' },
+  { id: 2, initials: 'NF', name: 'Neil F.', email: 'neil@example.com', online: true, status: 'Earned 280 XP in MA122', classes: ['MA122', 'EC120'], color: 'teal' },
+  { id: 3, initials: 'BJ', name: 'Ben J.', email: 'ben@example.com', online: false, status: 'Offline', classes: ['CP264'], color: 'amber' },
+  { id: 4, initials: 'SE', name: 'Sarv E.', email: 'sarv@example.com', online: true, status: 'Completed Midterm Essay', classes: ['EC120', 'CP264'], color: 'red' },
+  { id: 5, initials: 'VH', name: 'Victoria H.', email: 'victoria@example.com', online: false, status: 'Offline', classes: ['MATH 235'], color: 'violet' },
 ]
 
 const avatarColors = {

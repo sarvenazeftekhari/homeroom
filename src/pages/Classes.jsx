@@ -11,9 +11,9 @@ function Classes() {
   const [newClassCode, setNewClassCode] = useState('')
 
   const classes = [
-    { id: 1, name: 'CS 246 — OOP', instructor: 'Prof. Smith', students: 34, rank: 2, xp: 980, pending: 2, color: 'violet' },
-    { id: 2, name: 'MATH 235 — Linear Algebra', instructor: 'Prof. Jones', students: 28, rank: 1, xp: 740, pending: 0, color: 'teal' },
-    { id: 3, name: 'ECON 101 — Micro', instructor: 'Prof. Lee', students: 120, rank: 14, xp: 420, pending: 1, color: 'amber' },
+    { id: 1, name: 'CP264: Data Structures II', instructor: 'Prof. Fan', students: 34, rank: 2, xp: 980, pending: 2, color: 'violet' },
+    { id: 2, name: 'MA122: Linear Algebra', instructor: 'Prof. Zhang', students: 28, rank: 1, xp: 740, pending: 0, color: 'teal' },
+    { id: 3, name: 'EC120: Microeconomics', instructor: 'Prof. Schirle', students: 120, rank: 14, xp: 420, pending: 1, color: 'amber' },
   ]
 
   return (
