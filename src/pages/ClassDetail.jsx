@@ -94,6 +94,9 @@ function ClassDetail() {
   const navigate = useNavigate()
   const cls = classData[id]
   const [tab, setTab] = useState('assignments')
+  const [xp, setXp] = useState(cls.userXP)
+  const [purchased, setPurchased] = useState([])
+  const [toast, setToast] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [assignments, setAssignments] = useState(cls.assignments)
   const [newAssignment, setNewAssignment] = useState({ name: '', difficulty: 'Medium', deadline: '' })
@@ -116,6 +119,37 @@ function ClassDetail() {
       a.id === id ? { ...a, grade: Number(grade), status: 'done', xp: Math.round((grade / 100) * 200 * (a.difficulty === 'Hard' ? 2 : a.difficulty === 'Medium' ? 1.5 : 1)) } : a
     ))
   }
+
+  const shopItems = [
+    { id: 1, name: 'XP Booster', description: 'Double your XP on your next submitted assignment', cost: 300, emoji: '⚡', color: 'violet' },
+    { id: 2, name: 'Deadline Shield', description: 'Extend any assignment deadline by 24 hours without penalty', cost: 500, emoji: '🛡️', color: 'teal' },
+    { id: 3, name: 'Grade Guard', description: 'Protect your rank if you get a bad grade this week', cost: 400, emoji: '🔒', color: 'amber' },
+    { id: 4, name: 'Sabotage', description: "Freeze a rival's XP gains for 24 hours. They get a notification 😈", cost: 600, emoji: '💣', color: 'red' },
+    { id: 5, name: 'Streak Repair', description: 'Restore a lost streak as if you never missed a day', cost: 250, emoji: '🔥', color: 'amber' },
+    { id: 6, name: 'Bonus XP Drop', description: 'Instantly receive 200 bonus XP right now', cost: 350, emoji: '🎁', color: 'teal' },
+  ]
+
+  const shopColors = {
+    violet: { card: 'border-violet-800 hover:border-violet-600', emoji: 'bg-violet-900', badge: 'bg-violet-900 text-violet-300', button: 'bg-violet-600 hover:bg-violet-500' },
+    teal: { card: 'border-teal-800 hover:border-teal-600', emoji: 'bg-teal-900', badge: 'bg-teal-900 text-teal-300', button: 'bg-teal-600 hover:bg-teal-500' },
+    amber: { card: 'border-amber-800 hover:border-amber-600', emoji: 'bg-amber-900', badge: 'bg-amber-900 text-amber-300', button: 'bg-amber-600 hover:bg-amber-500' },
+    red: { card: 'border-red-800 hover:border-red-600', emoji: 'bg-red-900', badge: 'bg-red-900 text-red-300', button: 'bg-red-600 hover:bg-red-500' },
+  }
+
+  function handleBuy(item) {
+    if (xp < item.cost) {
+      showToast(`Not enough XP to buy ${item.name}!`, 'error')
+      return
+    }
+    setXp(xp - item.cost)
+    setPurchased([...purchased, item.id])
+    showToast(`${item.emoji} ${item.name} activated!`, 'success')
+  }
+
+  function showToast(message, type) {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 3000)
+  } 
 
   function handleAddAssignment() {
     if (!newAssignment.name || !newAssignment.deadline) return
@@ -190,6 +224,12 @@ function ClassDetail() {
               className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors ${tab === 'leaderboard' ? 'bg-violet-600 text-white' : 'bg-gray-900 text-gray-400 hover:text-white border border-gray-800'}`}
             >
               Leaderboard
+            </button>
+            <button
+              onClick={() => setTab('shop')}
+              className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors ${tab === 'shop' ? 'bg-violet-600 text-white' : 'bg-gray-900 text-gray-400 hover:text-white border border-gray-800'}`}
+            >
+              Point Shop
             </button>
           </div>
 
@@ -272,7 +312,91 @@ function ClassDetail() {
             </div>
           )}
 
+          {/* Point Shop tab */}
+          {tab === 'shop' && (
+            <div className="flex flex-col gap-6">
+
+              {/* XP balance */}
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm">Your XP balance in this class</p>
+                  <p className="text-white text-3xl font-semibold mt-1">{xp} XP</p>
+                </div>
+                <div className="text-4xl">🏦</div>
+              </div>
+
+              {/* Shop items */}
+              <div className="grid grid-cols-3 gap-4">
+                {shopItems.map(item => {
+                  const styles = shopColors[item.color]
+                  const bought = purchased.includes(item.id)
+                  const canAfford = xp >= item.cost
+                  return (
+                    <div
+                      key={item.id}
+                      className={`bg-gray-900 border rounded-2xl p-5 flex flex-col gap-3 transition-colors ${styles.card} ${bought ? 'opacity-50' : ''}`}
+                    >
+                      <div className={`w-11 h-11 ${styles.emoji} rounded-xl flex items-center justify-center text-2xl`}>
+                        {item.emoji}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-white font-semibold text-sm">{item.name}</h3>
+                        <p className="text-gray-400 text-xs mt-1 leading-relaxed">{item.description}</p>
+                      </div>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className={`text-xs font-semibold px-3 py-1 rounded-full ${styles.badge}`}>
+                          {item.cost} XP
+                        </span>
+                        <button
+                          onClick={() => handleBuy(item)}
+                          disabled={bought || !canAfford}
+                          className={`text-xs text-white font-medium px-3 py-1.5 rounded-xl transition-colors ${
+                            bought
+                              ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                              : !canAfford
+                              ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                              : styles.button
+                          }`}
+                        >
+                          {bought ? '✓ Active' : !canAfford ? 'Not enough XP' : 'Buy'}
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Active boosts */}
+              {purchased.length > 0 && (
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                  <h2 className="text-white font-medium mb-4">Active boosts</h2>
+                  <div className="flex flex-wrap gap-3">
+                    {purchased.map(id => {
+                      const item = shopItems.find(i => i.id === id)
+                      return (
+                        <div key={id} className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2">
+                          <span>{item.emoji}</span>
+                          <span className="text-white text-sm">{item.name}</span>
+                          <span className="text-green-400 text-xs font-medium">active</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+            </div>
+          )}
+
         </div>
+        {/* Toast */}
+      {toast && (
+        <div className={`fixed bottom-6 right-6 px-6 py-4 rounded-2xl text-white text-sm font-medium z-50 ${
+          toast.type === 'success' ? 'bg-violet-600' : 'bg-red-600'
+        }`}>
+          {toast.message}
+        </div>
+      )}
       </div>
 
       {/* Add Assignment Modal */}
