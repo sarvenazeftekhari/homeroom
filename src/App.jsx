@@ -6,6 +6,7 @@ import Assignments from './pages/Assignments'
 import Leaderboard from './pages/Leaderboard'
 import Shop from './pages/Shop'
 import ClassDetail from './pages/ClassDetail'
+import Friends from './pages/Friends'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/assignments" element={<Assignments />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/shop" element={<Shop />} />
+        <Route path="/friends" element={<Friends />} />
       </Routes>
     </BrowserRouter>
   )
