@@ -1,49 +1,58 @@
-# HomeRoom 🏠
+# HomeRoom
 
-A gamified assignment tracker that makes getting school work done fun and competitive.
+### 🌐 Live App: [https://homeroom-gilt.vercel.app/](https://homeroom-gilt.vercel.app/)
 
 ---
 
-## What you need to install first
+## What is HomeRoom?
 
-Before anything else, you need two things on your computer: **Node.js** and **Git**. Here's how to get them depending on your system.
+HomeRoom is a gamified assignment tracker that makes getting school work done fun and competitive. Students can create an account, join or create classes, track their assignments, and earn XP points based on how well and how quickly they complete their work.
 
-### Mac
+The better your grade and the earlier you submit, the more XP you earn. Each class has its own leaderboard so you can see how you rank against your classmates. You can also spend your XP in the Point Shop on boosters and power-ups to gain an edge — or sabotage your rivals 😈
 
-1. Open **Terminal** (press Command + Space, type Terminal, hit Enter)
-2. Check if you already have Node.js:
-   ```bash
-   node --version
-   ```
-   If you see a version number like `v20.0.0` you're good. If you see `command not found`, go to **https://nodejs.org**, download the **LTS** version, and install it.
+---
 
-3. Check if you already have Git:
-   ```bash
-   git --version
-   ```
-   If you see `command not found`, run this:
-   ```bash
-   xcode-select --install
-   ```
-   A popup will appear — click Install and wait for it to finish.
+## Features
 
-### Windows
+- **Account creation & login** — real authentication powered by Firebase
+- **Classes** — join or create classes, each with their own leaderboard and assignments
+- **Assignments** — add assignments, mark them as submitted, enter your grade, and watch your XP calculate automatically
+- **XP System** — points are calculated based on your grade, how early you submitted, and the difficulty of the assignment
+- **Leaderboard** — per-class rankings showing XP, average grade, and level
+- **Point Shop** — spend your XP on boosters like XP Multiplier, Deadline Shield, Sabotage, and more
+- **Friends** — see what your friends are up to and their recent activity
+- **Profile** — set your name and have it show up across the app
 
-1. Open **Command Prompt** (press the Windows key, type `cmd`, hit Enter)
-2. Check if you already have Node.js:
-   ```bash
-   node --version
-   ```
-   If you see `command not found`, go to **https://nodejs.org**, download the **LTS** version, and install it.
+---
 
-3. Check if you already have Git:
-   ```bash
-   git --version
-   ```
-   If you see `command not found`, go to **https://git-scm.com/download/win**, download Git for Windows, and install it with all the default settings.
+## Tech Stack
 
-### Linux
+| Layer | Technology |
+|---|---|
+| Frontend | React + Vite |
+| Styling | Tailwind CSS |
+| Routing | React Router |
+| Authentication | Firebase Auth |
+| Database | Firebase Firestore |
+| Hosting | Vercel |
 
+---
+
+## Getting Started
+
+### What you need to install first
+
+**Mac:**
+1. Open Terminal (Command + Space, type Terminal)
+2. Check for Node.js: `node --version` — if not found, download from [https://nodejs.org](https://nodejs.org) (LTS version)
+3. Check for Git: `git --version` — if not found, run `xcode-select --install`
+
+**Windows:**
+1. Open Command Prompt (Windows key, type `cmd`)
+2. Check for Node.js: `node --version` — if not found, download from [https://nodejs.org](https://nodejs.org) (LTS version)
+3. Check for Git: `git --version` — if not found, download from [https://git-scm.com/download/win](https://git-scm.com/download/win)
+
+**Linux:**
 ```bash
 sudo apt update
 sudo apt install nodejs npm git
@@ -51,128 +60,109 @@ sudo apt install nodejs npm git
 
 ---
 
-## How to get the project on your computer (only do this once)
+### Setting up the project (do this once)
 
-1. Open Terminal (Mac/Linux) or Command Prompt (Windows)
+**1. Clone the repo:**
+```bash
+cd ~/Desktop
+git clone https://github.com/sarvenazeftekhari/homeroom.git
+cd homeroom
+```
 
-2. Navigate to where you want to put the project, for example your Desktop:
-   ```bash
-   cd ~/Desktop
-   ```
+**2. Install dependencies:**
+```bash
+npm install
+```
 
-3. Clone the repo (this downloads all the code):
-   ```bash
-   git clone https://github.com/sarvenazeftekhari/homeroom.git
-   ```
+**3. Set up your Firebase environment variables:**
 
-4. Go into the project folder:
-   ```bash
-   cd homeroom
-   ```
+Create a file called `.env` in the root of the project and ask a teammate for the values. It should look like this:
+```
+VITE_FIREBASE_API_KEY=your_value
+VITE_FIREBASE_AUTH_DOMAIN=your_value
+VITE_FIREBASE_PROJECT_ID=your_value
+VITE_FIREBASE_STORAGE_BUCKET=your_value
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_value
+VITE_FIREBASE_APP_ID=your_value
+```
 
-5. Install all the dependencies (the building blocks the app needs):
-   ```bash
-   npm install
-   ```
-   This only needs to be done **once** after cloning.
-
----
-
-## How to run the website locally
-
-Every time you want to work on or view the app, do this:
-
-1. Open Terminal and go to the project folder:
-   ```bash
-   cd ~/Desktop/homeroom
-   ```
-
-2. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-3. Open your browser and go to:
-   ```
-   http://localhost:5173
-   ```
-
-You should see the HomeRoom login page. The site will automatically update in the browser every time you save a file — no need to refresh manually.
-
-To **stop the server**, press `Control + C` in the terminal.
+> ⚠️ Never commit your `.env` file to GitHub. It is already listed in `.gitignore`.
 
 ---
 
-## How to get the latest changes from your teammates
+### Running the app locally
 
-Before you start working each day, always pull the latest code so you're up to date:
+```bash
+npm run dev
+```
 
+Then open your browser and go to: **http://localhost:5173**
+
+The site will automatically update every time you save a file.
+
+To stop the server: press `Control + C` in the terminal.
+
+---
+
+## Working with Git as a team
+
+**Get the latest changes before you start working:**
 ```bash
 git pull origin main
 ```
 
----
-
-## How to save and share your own changes
-
-After making changes to the code, save them to GitHub with these 3 commands:
-
+**Save and share your changes:**
 ```bash
 git add .
-git commit -m "describe what you changed here"
+git commit -m "describe what you changed"
 git push
 ```
 
-When it asks for your GitHub password, use your **personal access token** (not your real password). See a teammate if you need help setting this up.
-
----
-
-## Branching (working without breaking each other's code)
-
-Each person should work on their own branch:
-
+**If your push gets rejected (someone else pushed first):**
 ```bash
-git checkout -b yourname/feature-name
-```
-
-For example:
-```bash
-git checkout -b neil/leaderboard
-```
-
-When you're done and want to merge into main:
-```bash
-git checkout main
-git merge yourname/feature-name
+git pull origin main --no-rebase
 git push
 ```
 
 ---
 
-## Project structure
+## Project Structure
 
 ```
 homeroom/
-├── public/           ← Static files (icons, images)
+├── public/               ← Static files (bird mascot, icons)
 ├── src/
-│   ├── components/   ← Reusable pieces (Sidebar, etc.)
-│   ├── pages/        ← Full pages (Login, Dashboard, Classes, etc.)
-│   ├── App.jsx       ← Routes / page navigation
-│   ├── main.jsx      ← Entry point (don't touch)
-│   └── index.css     ← Global styles
-├── index.html
+│   ├── components/
+│   │   └── Sidebar.jsx   ← Shared sidebar navigation
+│   ├── pages/
+│   │   ├── Login.jsx     ← Sign in / Sign up
+│   │   ├── Dashboard.jsx ← Home screen
+│   │   ├── Classes.jsx   ← All classes overview
+│   │   ├── ClassDetail.jsx ← Per-class assignments, leaderboard, shop
+│   │   ├── Friends.jsx   ← Friends list
+│   │   └── Profile.jsx   ← User profile & name
+│   ├── firebase.js       ← Firebase config
+│   ├── App.jsx           ← Routes
+│   ├── main.jsx          ← Entry point
+│   └── index.css         ← Global styles
+├── .env                  ← Secret keys (never commit this)
+├── .gitignore
 ├── package.json
 └── vite.config.js
 ```
 
 ---
 
-## Tech stack
+## How XP is Calculated
 
-| Layer | Technology |
-|---|---|
-| Frontend | React + Vite |
-| Styling | Tailwind CSS |
-| Routing | React Router |
-| Database | Firebase (coming soon) |
-| Hosting | Vercel (coming soon) |
+XP is awarded when you enter your grade for a submitted assignment. The formula takes into account:
+
+- **Grade** — higher grade = more base XP
+- **Difficulty** — Easy (1x), Medium (1.5x), Hard (2x) multiplier
+- **Timeliness** — submitting early earns bonus XP (up to +100 XP)
+
+---
+
+## Hackathon
+
+Built at a hackathon. Powered by caffeine and competitive energy ☕
